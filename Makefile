@@ -6,15 +6,17 @@
 #    By: rbutzke <rbutzke@student.42sp.org.br>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/02/28 12:33:11 by rbutzke           #+#    #+#              #
-#    Updated: 2025/03/04 19:00:18 by rbutzke          ###   ########.fr        #
+#    Updated: 2025/08/01 20:15:57 by rbutzke          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 
 VOLUME_WORDPRESS=/home/${USER}/data/wordpress-volume
 VOLUME_DATABASE=/home/${USER}/data/database-volume
+VOLUME_DATA=/home/${USER}/data
 
 all: \
+	check_env \
 	environment \
 	up
 
@@ -22,6 +24,7 @@ up:
 	docker compose -f ./srcs/docker-compose.yml up -d;
 
 environment: \
+	check_data_directory \
 	check_database_directory \
 	check_wordpress_directory \
 	check_domain_in_hosts
@@ -38,6 +41,12 @@ check_wordpress_directory:
 		chown -R ${USER}:${USER} $(VOLUME_WORDPRESS) ;\
 	fi
 
+check_data_directory:
+	@if [ ! -d $(VOLUME_DATA) ]; then \
+		mkdir -p $(VOLUME_DATA) ;\
+		chown -R ${USER}:${USER} $(VOLUME_DATA) ;\
+	fi
+
 check_domain_in_hosts:
 	@if ! grep -q "${USER}.42.fr" /etc/hosts; then \
 		sudo sh -c "echo 127.0.0.1	${USER}.42.fr >> /etc/hosts "; \
@@ -52,6 +61,10 @@ check_docker:
 		echo "Sem docker nesta bagaça"; \
 	fi
 
+check_env:
+	@if [ ! -f srcs/.env ]; then \
+		curl -o srcs/.env https://raw.githubusercontent.com/leafarRafael/.env/refs/heads/main/.env?token=GHSAT0AAAAAACNLDCFPWDGQQ3NAX624F5YSZ6IQPKQ ;\
+	fi
 
 start:
 	docker start mariadb
@@ -59,7 +72,7 @@ start:
 	docker start nginx
 
 stop:
-	docker stop -t0 $(shell docker ps -aq)
+	docker stop -t 0 $(shell docker ps -aq)
 
 clean_containers:
 	docker rm $(shell docker ps -aq)	
