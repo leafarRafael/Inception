@@ -6,7 +6,7 @@
 #    By: user42 <user42@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/02/28 12:33:11 by rbutzke           #+#    #+#              #
-#    Updated: 2025/08/02 15:03:58 by user42           ###   ########.fr        #
+#    Updated: 2025/08/02 15:35:16 by user42           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -52,8 +52,8 @@ check_data_directory:
 	fi
 
 check_domain_in_hosts:
-	@if ! grep -q "${USER}.42.fr" /etc/hosts; then \
-		sudo sh -c "echo 127.0.0.1	${USER}.42.fr >> /etc/hosts "; \
+	@if ! grep -q "rbutzke.42.fr" /etc/hosts; then \
+		sudo sh -c "echo 127.0.0.1	rbutzke.42.fr >> /etc/hosts "; \
 	fi
 
 check_docker:
@@ -112,6 +112,7 @@ clean_directory:
 	echo "Deleting directories from volumes on the host"
 	sudo sh -c "rm -Rf $(VOLUME_WORDPRESS)";
 	sudo sh -c "rm -Rf $(VOLUME_DATABASE)";
+	sudo sh -c "rm -Rf $(VOLUME_DATA)";
 
 clean_all: \
 	stop \
@@ -120,7 +121,7 @@ clean_all: \
 	clean_volumes \
 	clean_network \
 	clean_system \
-	clean_directory
+	clean_directory 
 
 
 re_all: clean_all all

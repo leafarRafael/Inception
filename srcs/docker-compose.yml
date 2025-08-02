@@ -10,7 +10,7 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/${USER}/data/database-volume
+      device: /home/rbutzke/data/database-volume
 
   inception-site:
     driver: local
@@ -18,7 +18,7 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /home/${USER}/data/wordpress-volume
+      device: /home/rbutzke/data/wordpress-volume
 
 services:
   nginx:
