@@ -3,17 +3,21 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: rbutzke <rbutzke@student.42sp.org.br>      +#+  +:+       +#+         #
+#    By: user42 <user42@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/02/28 12:33:11 by rbutzke           #+#    #+#              #
-#    Updated: 2025/08/01 20:15:57 by rbutzke          ###   ########.fr        #
+#    Updated: 2025/08/02 15:03:58 by user42           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
+.PHONY: all up environment check_database_directory check_wordpress_directory \
+	check_data_directory check_domain_in_hosts check_docker check_env start \
+	stop clean_containers clean_images clean_volumes clean_network clean_system \
+	clean_directory clean_all re_all
 
-VOLUME_WORDPRESS=/home/${USER}/data/wordpress-volume
-VOLUME_DATABASE=/home/${USER}/data/database-volume
-VOLUME_DATA=/home/${USER}/data
+VOLUME_WORDPRESS=/home/rbutzke/data/wordpress-volume
+VOLUME_DATABASE=/home/rbutzke/data/database-volume
+VOLUME_DATA=/home/rbutzke/data
 
 all: \
 	check_env \
@@ -31,20 +35,20 @@ environment: \
 
 check_database_directory:
 	@if [ ! -d $(VOLUME_DATABASE) ]; then \
-		mkdir -p $(VOLUME_DATABASE) ;\
-		chown -R ${USER}:${USER} $(VOLUME_DATABASE) ;\
+		sudo mkdir -p $(VOLUME_DATABASE) ;\
+		sudo chown -R ${USER}:${USER} $(VOLUME_DATABASE) ;\
 	fi
 
 check_wordpress_directory:
 	@if [ ! -d $(VOLUME_WORDPRESS) ]; then \
-		mkdir -p $(VOLUME_WORDPRESS) ;\
-		chown -R ${USER}:${USER} $(VOLUME_WORDPRESS) ;\
+		sudo mkdir -p $(VOLUME_WORDPRESS) ;\
+		sudo chown -R ${USER}:${USER} $(VOLUME_WORDPRESS) ;\
 	fi
 
 check_data_directory:
 	@if [ ! -d $(VOLUME_DATA) ]; then \
-		mkdir -p $(VOLUME_DATA) ;\
-		chown -R ${USER}:${USER} $(VOLUME_DATA) ;\
+		sudo mkdir -p $(VOLUME_DATA) ;\
+		sudo chown -R ${USER}:${USER} $(VOLUME_DATA) ;\
 	fi
 
 check_domain_in_hosts:
@@ -53,17 +57,20 @@ check_domain_in_hosts:
 	fi
 
 check_docker:
-	@if docker --version; then \
+	@if ! docker --version >/dev/null 2>&1; then \
+		echo "Docker não encontrado. Instalando..."; \
 		sudo sh -c "apt-get update"; \
-		sudo sh -c "apt-get upgrade -y" ;\ 
+		sudo sh -c "apt-get upgrade -y"; \
 		sudo sh -c "apt-get install -y ./docker-desktop-amd64.deb"; \
 		sudo sh -c "systemctl --user start docker-desktop"; \
-		echo "Sem docker nesta bagaça"; \
+	else \
+		echo "Docker já está instalado"; \
 	fi
 
 check_env:
 	@if [ ! -f srcs/.env ]; then \
-		curl -o srcs/.env https://raw.githubusercontent.com/leafarRafael/.env/refs/heads/main/.env?token=GHSAT0AAAAAACNLDCFPWDGQQ3NAX624F5YSZ6IQPKQ ;\
+		echo "Arquivo .env não encontrado. Por favor, crie o arquivo srcs/.env manualmente."; \
+		exit 1; \
 	fi
 
 start:
@@ -75,19 +82,31 @@ stop:
 	docker stop -t 0 $(shell docker ps -aq)
 
 clean_containers:
-	docker rm $(shell docker ps -aq)	
+	@if [ -n "$$(docker ps -aq)" ]; then \
+		docker rm $$(docker ps -aq); \
+	else \
+		echo "Nenhum container para remover"; \
+	fi
 
 clean_images:
-	docker rmi $(shell docker images -q)
+	@if [ -n "$$(docker images -q)" ]; then \
+		docker rmi $$(docker images -q); \
+	else \
+		echo "Nenhuma imagem para remover"; \
+	fi
 
 clean_volumes:
-	docker volume rm $(shell docker volume ls -q)
+	@if [ -n "$$(docker volume ls -q)" ]; then \
+		docker volume rm $$(docker volume ls -q); \
+	else \
+		echo "Nenhum volume para remover"; \
+	fi
 
 clean_network:
-	docker network prune
+	@docker network prune -f
 
 clean_system:
-	docker system prune
+	@docker system prune -f
 
 clean_directory:
 	echo "Deleting directories from volumes on the host"
